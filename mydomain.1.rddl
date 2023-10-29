@@ -1,0 +1,144 @@
+domain USV_obstacle_nav_v1 {
+
+    requirements = {
+        concurrent,
+        reward-deterministic,
+        integer-valued,
+        cpf-deterministic,
+				constrained-state
+    };
+
+    types {
+        USV : object;
+        obs : object;
+    };
+
+    pvariables {
+        //test non-fluent, used in case errors are thrown for not having any non-fluents (they shouldn't, but you never know)
+        testVariable : {non-fluent, bool, default = true};
+
+        //has the USV been hit by an obstacle?
+        damaged : {state-fluent, bool, default = false};
+
+        //is the USV at the goal?
+        atGoal : {state-fluent, bool, default = false};
+
+        //position of floating objects
+        xPos(obs) : {state-fluent, int, default = 0};
+        yPos(obs) : {state-fluent, int, default = 0};
+
+        //velocity and headings of floating objects
+        xVel(obs) : {state-fluent, int, default = 0};
+        yVel(obs) : {state-fluent, int, default = 0};
+
+        //heading is a scale of 0 to 40 (for a full circle)
+        heading(obs) : {state-fluent, int, default = 0};
+        //total velocity (used to calc X and Y vel with the heading)
+        tVel(obs) : {state-fluent, int, default = 0};
+
+        //Repeat for the USV (no sub-objects)
+        //The smart thing to do is to have one class of floating objects and give the USV a fluent to differentiate it but I am lazy
+        //I will change this to be the case in a later version, this is better for debugging
+        //position of USV
+        xPosU(USV) : {state-fluent, int, default = 0};
+        yPosU(USV) : {state-fluent, int, default = 0};
+
+        //velocity and headings of USV
+        xVelU(USV) : {state-fluent, int, default = 0};
+        yVelU(USV) : {state-fluent, int, default = 0};
+
+        //heading is a scale of 0 to 40 (for a full circle)
+        headingU(USV) : {state-fluent, int, default = 0};
+        //again total velocity
+        tVelU(USV) : {state-fluent, int, default = 0};
+
+        //adjust heading and velocity for boat (these are capped in action preconditions)
+        headAdj(USV) : {action-fluent, int, default = 0};
+        tVelAdj(USV) : {action-fluent, int, default = 0};
+
+    };
+
+    cpfs {
+
+        //update position counters
+        xPos'(?o) = xPos(?o) + xVel(?o);
+        yPos'(?o) = yPos(?o) + yVel(?o);
+
+        //update velocities
+        xVel'(?o) = if(heading(?o) <= 10)
+                        then (tVel(?o)*(10-heading(?o)))
+                    else if(heading(?o) <= 20)
+                        then (-tVel(?o)*(heading(?o) - 10))
+                    else if(heading(?o) <= 30)
+                        then (-tVel(?o)*(30 - heading(?o)))
+                    else
+                        (tVel(?o)*(heading(?o)-30));
+
+        yVel'(?o) = if(heading(?o) <= 10)
+                        then (tVel(?o)*heading(?o))
+                    else if(heading(?o) <= 20)
+                        then (tVel(?o)*(20-heading(?o)))
+                    else if(heading(?o) <= 30)
+                        then (-tVel(?o)*(heading(?o)-20))
+                    else
+                        (-tVel(?o)*(40-heading(?o)));
+
+        //Update the velocities and heading probabilistically for semi-random movement
+        tVel'(?o) = tVel(?o);
+        heading'(?o) = heading(?o);
+
+        //update position counters
+        xPosU'(?b) = xPosU(?b) + xVelU(?b);
+        yPosU'(?b) = yPosU(?b) + yVelU(?b);
+
+        //update velocities
+        xVelU'(?b) = if(headingU(?b) <= 10)
+                        then (tVelU(?b)*(10-headingU(?b)))
+                    else if(headingU(?b) <= 20)
+                        then (-tVelU(?b)*(headingU(?b) - 10))
+                    else if(headingU(?b) <= 30)
+                        then (-tVelU(?b)*(30 - headingU(?b)))
+                    else
+                        (tVelU(?b)*(headingU(?b)-30));
+
+        yVelU'(?b) = if(headingU(?b) <= 10)
+                        then (tVelU(?b)*headingU(?b))
+                    else if(headingU(?b) <= 20)
+                        then (tVelU(?b)*(20-headingU(?b)))
+                    else if(headingU(?b) <= 30)
+                        then (-tVelU(?b)*(headingU(?b)-20))
+                    else
+                        (-tVelU(?b)*(40-headingU(?b)));
+
+        tVelU'(?b) = tVelU(?b) + tVelAdj(?b);
+        headingU'(?b) = headingU(?b) + headAdj(?b);
+
+        damaged' =  if(exists_{?b : USV, ?o : obs}((xPosU(?b) - xPos(?o) < 5) ^ (xPosU(?b) - xPos(?o) > -5) ^ (yPosU(?b) - yPos(?o) < 5) ^ (yPosU(?b) - yPos(?o) > -5)))
+                        then true
+                    else
+                        false;
+
+        atGoal' = if(exists_{?b : USV}((1000 - xPosU(?b) < 5) ^ (1000 - xPosU(?b)) > -5 ^ (1000 - yPosU(?b) < 5) ^ (1000 - yPosU(?b) > -5)))
+                        then true
+                    else
+                        false;
+    };
+
+    action-preconditions {
+
+		//Speed and heading change cap!
+        forall_{?b : USV} [(headAdj(?b) <= 3) ^ (headAdj(?b) >= -3) ^ (tVelAdj(?b) <= 3) ^ (tVelAdj(?b) >= -3)];
+        
+		};
+
+    state-invariants{
+        //Speed limit and heading limit    state-invariants{
+        //Speed limit and heading limit
+        forall_{?b : USV} [(headingU(?b) <= 40) ^ (headingU(?b) >= 0) ^ (tVelU(?b) <= 3) ^ (tVelU(?b) >= -3)];
+    };
+        forall_{?b : USV} [(headingU(?b) <= 40) ^ (headingU(?b) >= 0) ^ (tVelU(?b) <= 3) ^ (tVelU(?b) >= -3)];
+        forall_{?o : obs} [(heading(?o) <= 40) ^ (heading(?o) >= 0) ^ (tVel(?o) <= 5) ^ (tVel(?o) >= -5)];
+    };
+
+    reward = ~damaged*atGoal;
+}
