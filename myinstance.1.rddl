@@ -15,13 +15,13 @@ instance USV_obstacle_nav_inst_v1 {
     domain = USV_obstacle_nav_v1;
     non-fluents = nf_USV_obstacle_nav_v1;
     init-state{
-        xPos(o1) = 400;
-        yPos(o1) = 400;
+        xPos(o1) = 100;
+        yPos(o1) = 100;
         heading(o1) = 0;
         tVel(o1) = 1;
 
-        xPos(o2) = 200;
-        yPos(o2) = 500;
+        xPos(o2) = 300;
+        yPos(o2) = 300;
         heading(o2) = 25;
         tVel(o2) = 2;
 
@@ -32,6 +32,6 @@ instance USV_obstacle_nav_inst_v1 {
     };
 
     max-nondef-actions = 2;
-    horizon = 100;
+    horizon = 50;
     discount = 1.0;
 }
