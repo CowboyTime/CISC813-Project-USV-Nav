@@ -5,7 +5,7 @@ domain USV_obstacle_nav_v1 {
         reward-deterministic,
         integer-valued,
         cpf-deterministic,
-	constrained-state
+				constrained-state
     };
 
     types {
@@ -82,14 +82,14 @@ domain USV_obstacle_nav_v1 {
 
         //Update the velocities and heading probabilistically for semi-random movement (restrained)
         //Using Poisson distribution, but this should probably be changed to Gaussian for truly random results
-        OtVelAdj'(?o) = Poisson(10) - 10;
-        OheadAdj'(?o) = Poisson(10) - 10;
+        OtVelAdj'(?o) = Poisson(3) - 3;
+        OheadAdj'(?o) = Poisson(3) - 3;
 
         //apply speed limits
-        tVel'(?o) = if (tVel(?o) + OtVelAdj(?o) > 10)
-                        then 10
-                    else if (tVel(?o) + OtVelAdj(?o) < -10)
-                        then -10
+        tVel'(?o) = if (tVel(?o) + OtVelAdj(?o) > 5)
+                        then 5
+                    else if (tVel(?o) + OtVelAdj(?o) < 0)
+                        then 0
                     else
                         tVel(?o) + OtVelAdj(?o);
         //apply heading limits
@@ -122,16 +122,16 @@ domain USV_obstacle_nav_v1 {
                         then (-tVelU(?b)*(headingU(?b)-20))
                     else
                         (-tVelU(?b)*(40-headingU(?b)));
-        
+
         //update total velocity and heading
         //apply speed limits
-        tVelU'(?b) = if (tVelU(?b) + tVelAdj(?b) > 10)
-                        then 10
-                    else if (tVelU(?b) + tVelAdj(?b) < -10)
-                        then -10
+        tVelU'(?b) = if (tVelU(?b) + tVelAdj(?b) > 5)
+                        then 5
+                    else if (tVelU(?b) + tVelAdj(?b) < 0)
+                        then 0
                     else
                         tVelU(?b) + tVelAdj(?b);
-                        
+
         //apply heading limits
         headingU'(?b) = if ((headingU(?b) + headAdj(?b) <= 40) ^ (headingU(?b) + headAdj(?b) >= 0))
                           then (headingU(?b) + headAdj(?b))
@@ -140,21 +140,23 @@ domain USV_obstacle_nav_v1 {
                       else
                           (headingU(?b) + headAdj(?b) - 40);
 
-        damaged' =  if(exists_{?b : USV, ?o : obs}((xPosU(?b) - xPos(?o) < 5) ^ (xPosU(?b) - xPos(?o) > -5) ^ (yPosU(?b) - yPos(?o) < 5) ^ (yPosU(?b) - yPos(?o) > -5)))
+        damaged' =  if(exists_{?b : USV, ?o : obs}((xPosU(?b) - xPos(?o) < 20) ^ (xPosU(?b) - xPos(?o) > -20) ^ (yPosU(?b) - yPos(?o) < 20) ^ (yPosU(?b) - yPos(?o) > -20)) | damaged)
                         then true
                     else
                         false;
 
-        atGoal' = if(exists_{?b : USV}((1000 - xPosU(?b) < 5) ^ (1000 - xPosU(?b)) > -5 ^ (1000 - yPosU(?b) < 5) ^ (1000 - yPosU(?b) > -5)))
+        atGoal' = if(exists_{?b : USV}((200 - xPosU(?b) < 20) ^ (200 - xPosU(?b)) > -20 ^ (0 - yPosU(?b) < 20) ^ (0 - yPosU(?b) > -20)))
                         then true
                     else
                         false;
     };
 
     action-preconditions {
-	//Speed and heading change cap!
+
+		//Speed and heading change cap!
         forall_{?b : USV} [(headAdj(?b) <= 3) ^ (headAdj(?b) >= -3) ^ (tVelAdj(?b) <= 1) ^ (tVelAdj(?b) >= -1)];
 		};
 
+    //reward = atGoal^(forall_{?b : USV} (tVelU(?b) == 0));
     reward = ~damaged*atGoal;
 }
