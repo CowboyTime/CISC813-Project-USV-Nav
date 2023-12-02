@@ -1,0 +1,74 @@
+domain USV_obstacle_nav_v1 {
+
+    requirements = {
+        concurrent,
+        reward-deterministic,
+        cpf-deterministic,
+				constrained-state,
+        multivalued,
+        continuous
+    };
+
+    types {
+      obs : object;
+      USV : object;
+    };
+
+    pvariables {
+        testVariable : {non-fluent, bool, default = true};
+        damaged(USV) : {state-fluent, bool, default = false};
+        distance(USV) : {state-fluent, real, default = 0.0};
+
+        xPos(USV) : {state-fluent, real, default = 0.0};
+        yPos(USV) : {state-fluent, real, default = 0.0};
+
+        xVel(USV) : {state-fluent, real, default = 0.0};
+        yVel(USV) : {state-fluent, real, default = 0.0};
+
+        heading(USV) : {action-fluent, real, default = 0.0};
+
+        //headAdj : {action-fluent, real, default = 0.0};
+        tVel(USV) : {action-fluent, real, default = 0.0};
+
+        obsXp(obs) : {state-fluent, real, default = 0.0};
+        obsYp(obs) : {state-fluent, real, default = 0.0};
+
+    };
+
+    cpfs {
+
+        //update position counters
+        xPos'(?b) = xPos(?b) + xVel(?b)*0.5;
+        yPos'(?b) = yPos(?b) + yVel(?b)*0.5;
+
+        //update velocities
+        xVel'(?b) = cos[heading(?b)]*tVel(?b);
+
+        yVel'(?b) = sin[heading(?b)]*tVel(?b);
+
+        //apply heading limits
+        //heading' = heading + headAdj*0.5;
+
+        distance'(?b) = pow[(100-xPos(?b)),2] + pow[(100-yPos(?b)),2];
+
+        damaged'(?b) = if (exists_{?o : obs}((pow[(xPos(?b) - obsXp(?o)),2] + pow[(yPos(?b) - obsYp(?o)),2]) <= 81) | damaged(?b))
+                    then true
+                  else
+                    false;
+
+
+
+        obsXp'(?o) = obsXp(?o) + 0;
+        obsYp'(?o) = obsYp(?o) + 0;
+    };
+
+    action-preconditions {
+		//Speed and heading change cap!
+        //(headAdj <= 1);
+        //(headAdj >= -1);
+        forall_{?b : USV}[tVel(?b) <= 2];
+        forall_{?b : USV}[tVel(?b) >= -0.5];
+		};
+
+    reward = -sum_{?b:USV}(distance(?b) + damaged(?b)*100000);
+}
