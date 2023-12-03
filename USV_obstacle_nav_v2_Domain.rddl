@@ -15,7 +15,10 @@ domain USV_obstacle_nav_v1 {
     };
 
     pvariables {
-        testVariable : {non-fluent, bool, default = true};
+
+        XG : {non-fluent, real, default = 100.0};
+        YG : {non-fluent, real, default = 100.0};
+        //testVariable : {non-fluent, bool, default = true};
         damaged(USV) : {state-fluent, bool, default = false};
         distance(USV) : {state-fluent, real, default = 0.0};
 
@@ -32,6 +35,8 @@ domain USV_obstacle_nav_v1 {
 
         obsXp(obs) : {state-fluent, real, default = 0.0};
         obsYp(obs) : {state-fluent, real, default = 0.0};
+        obsV(obs) : {state-fluent, real, default = 0.0};
+        obsHead(obs) : {state-fluent, real, default = 0.0};
 
     };
 
@@ -43,32 +48,31 @@ domain USV_obstacle_nav_v1 {
 
         //update velocities
         xVel'(?b) = cos[heading(?b)]*tVel(?b);
-
         yVel'(?b) = sin[heading(?b)]*tVel(?b);
 
-        //apply heading limits
-        //heading' = heading + headAdj*0.5;
 
-        distance'(?b) = pow[(100-xPos(?b)),2] + pow[(100-yPos(?b)),2];
+        distance'(?b) = pow[(XG - xPos(?b)),2] + pow[(YG - yPos(?b)),2];
 
-        damaged'(?b) = if (exists_{?o : obs}((pow[(xPos(?b) - obsXp(?o)),2] + pow[(yPos(?b) - obsYp(?o)),2]) <= 81) | damaged(?b))
+        damaged'(?b) = if (exists_{?o : obs}((pow[(xPos(?b) - obsXp(?o)),2] + pow[(yPos(?b) - obsYp(?o)),2]) <= 100) | damaged(?b))
                     then true
-                  else
+                 else
                     false;
 
+        obsHead'(?o) = obsHead(?o) + 0;
+        obsV'(?o) = obsV(?o) + 0;
 
-
-        obsXp'(?o) = obsXp(?o) + 0;
-        obsYp'(?o) = obsYp(?o) + 0;
+        obsXp'(?o) = obsXp(?o) + cos[obsHead(?o)]*obsV(?o)*0.5;
+        obsYp'(?o) = obsYp(?o) + sin[obsHead(?o)]*obsV(?o)*0.5;
+        //obsXp'(?o) = obsXp(?o) + 0;
+        //obsYp'(?o) = obsYp(?o) + 0;
     };
 
     action-preconditions {
 		//Speed and heading change cap!
-        //(headAdj <= 1);
-        //(headAdj >= -1);
         forall_{?b : USV}[tVel(?b) <= 2];
         forall_{?b : USV}[tVel(?b) >= -0.5];
 		};
 
     reward = -sum_{?b:USV}(distance(?b) + damaged(?b)*100000);
+    //reward = -sum_{?b:USV}(distance(?b));
 }
