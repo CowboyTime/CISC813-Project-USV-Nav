@@ -21,14 +21,16 @@ instance USV_obstacle_nav_inst_v1 {
       yPos(b1) = 0.0;
       //heading = 1.570796;
 
-      obsXp(o1) = 80.0;
-      obsYp(o1) = 80.0;
+      obsXp(o1) = 60.0;
+      obsYp(o1) = 40.0;
       obsV(o1) = 1.0;
       obsHead(o1) = 3.1415;
-      obsXp(o2) = 100.0;
-      obsYp(o2) = 80.0;
-      obsV(o2) = 1.0;
+
+      obsXp(o2) = 40.0;
+      obsYp(o2) = 60.0;
+      obsV(o2) = 0.8;
       obsHead(o2) = 3.1415;
+
     };
 
     max-nondef-actions = 2;
