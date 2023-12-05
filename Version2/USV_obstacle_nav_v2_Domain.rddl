@@ -1,4 +1,4 @@
-domain USV_obstacle_nav_v1 {
+domain USV_obstacle_nav_v2 {
 
     requirements = {
         concurrent,
