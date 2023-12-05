@@ -1,5 +1,5 @@
-non-fluents nf_USV_obstacle_nav_v1 {
-    domain = USV_obstacle_nav_v1;
+non-fluents nf_USV_obstacle_nav_v2 {
+    domain = USV_obstacle_nav_v2;
 
     objects{
       obs : {o1, o2};
@@ -12,9 +12,9 @@ non-fluents nf_USV_obstacle_nav_v1 {
 
 }
 
-instance USV_obstacle_nav_inst_v1 {
-    domain = USV_obstacle_nav_v1;
-    non-fluents = nf_USV_obstacle_nav_v1;
+instance USV_obstacle_nav_inst_v2 {
+    domain = USV_obstacle_nav_v2;
+    non-fluents = nf_USV_obstacle_nav_v2;
     init-state{
 
       xPos(b1) = 0.0;
