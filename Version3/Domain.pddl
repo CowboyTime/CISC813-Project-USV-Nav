@@ -46,6 +46,8 @@ domain USV_obstacle_nav_v3 {
         //Obstacle states
         obsXp(obs) : {state-fluent, real, default = 0.0};
         obsYp(obs) : {state-fluent, real, default = 0.0};
+	obsXv(obs) : {state-fluent, real, default = 0.0};
+	obsYv(obs) : {state-fluent, real, default = 0.0};
         obsV(obs) : {state-fluent, real, default = 0.0};
         obsHead(obs) : {state-fluent, real, default = 0.0};
 
@@ -70,33 +72,50 @@ domain USV_obstacle_nav_v3 {
                         then if (relAngle(?b, ?o) < 0.2617994 ^ relAngle(?b, ?o) > -0.2617994)
                             //Head on
                             //Difference between angles and 30 degrees to right
-                            then if (obsHead(?o) < 0)
-                              then abs(0.5235988 - (obsHead(?o) + 3.1415 - heading(?b))
-                            else
-                              abs(-0.5235988 - (obsHead(?o) - 3.1415 - heading(?b))
+                            then if (obsHead(?o) - heading(?b) + 3.1415 > 3.1415)
+				then abs(0.5235988 - (obshead(?o) - heading(?b) - 3.1415))
+			    else if (obsHead(?o) - heading(?b) + 3.1415 < -3.1415)
+				//this case should never happen
+				then abs(0.5235988 - (obshead(?o) - heading(?b) + 3*3.1415))
+			    else
+                                abs(0.5235988 - (obshead(?o) - heading(?b) + 3.1415))
                           else if (relAngle(?b, ?o) < 1.963495 ^ relAngle(?b, ?o) > 0.2617994)
                             //Cross Right (30 degrees past perpendicular, to left)
-                            then if (obsHead(?o) < 0)
-                              then abs(0.5235988 - (obsHead(?o) - 1.570796 - heading(?b))
-                            else
-                              abs(-0.5235988 - (obsHead(?o) + 1.570796 - heading(?b))
+                            then if (obsHead(?o) - heading(?b) + 3.1415 > 3.1415)
+				then abs(0.2617994 - (obshead(?o) - heading(?b) - 3.1415))
+			    else if (obsHead(?o) - heading(?b) + 3.1415 < -3.1415)
+				//this case should never happen
+				then abs(0.2617994 - (obshead(?o) - heading(?b) + 3*3.1415))
+			    else
+                                abs(0.2617994 - (obshead(?o) - heading(?b) + 3.1415))
                           else if (relAngle(?b, ?o) > -1.963495 ^ relAngle(?b, ?o) < -0.2617994)
                             //Cross left (30 degrees past perpendicular, to right)
-                            then if (obsHead(?o) < 0)
-                              then abs(0.5235988 - (obsHead(?o) + 1.570796 - heading(?b))
-                            else
-                              abs(-0.5235988 - (obsHead(?o) - 1.570796 - heading(?b))
+    			    then if (obsHead(?o) - heading(?b) + 3.1415 > 3.1415)
+				then abs(-0.2617994 - (obshead(?o) - heading(?b) - 3.1415))
+			    else if (obsHead(?o) - heading(?b) + 3.1415 < -3.1415)
+				//this case should never happen
+				then abs(-0.2617994 - (obshead(?o) - heading(?b) + 3*3.1415))
+			    else
+                                abs(-0.2617994 - (obshead(?o) - heading(?b) + 3.1415))
                           else
                             //Overtake (30 degrees to right)
-                            if (obsHead(?o) < 0)
-                              then abs(0.5235988 - (obsHead(?o) - heading(?b))
-                            else
-                              abs(-0.5235988 - (obsHead(?o) - heading(?b))
+			    then if (obsHead(?o) - heading(?b) > 3.1415)
+				then abs(0.5235988 - (obshead(?o) - heading(?b) - 2*3.1415))
+			    else if (obsHead(?o) - heading(?b) < -3.1415)
+				then abs(0.5235988 - (obshead(?o) - heading(?b) + 2*3.1415))
+			    else
+                                abs(0.5235988 - (obshead(?o) - heading(?b)))
+                              
                       else
                         0;
 
         //relative angle between position of vessels adjusted for obstacle vessel heading
-        relAngle'(?b,?o) = atan(obsYp(?o) - yPos(?b), obsXp(?o) - xPos(?b)) - obsHead(?o);
+        relAngle'(?b,?o) = if (obsXp(?o) - xPos(?b) > 0 ^ obsYp(?o) - yPos(?b) > 0)
+				then atan(obsYp(?o) - yPos(?b), obsXp(?o) - xPos(?b)) - obsHead(?o)
+			   else if (obsXp(?o) - xPos(?b) < 0 ^ obsYp(?o) - yPos(?b) > 0)
+				atan(obsYp(?o) - yPos(?b), obsXp(?o) - xPos(?b)) - obsHead(?o) + 3.1415
+			   else
+				atan(obsYp(?o) - yPos(?b), obsXp(?o) - xPos(?b)) - obsHead(?o) - 3.1415;
 
         //Apply damage if collided
         //In this case radius is 5m
@@ -110,10 +129,10 @@ domain USV_obstacle_nav_v3 {
         obsV'(?o) = obsV(?o) + 0;
 
         //Update obstacle positions
-        obsXp'(?o) = obsXp(?o) + cos[obsHead(?o)]*obsV(?o)*0.5;
-        obsYp'(?o) = obsYp(?o) + sin[obsHead(?o)]*obsV(?o)*0.5;
-        //obsXp'(?o) = obsXp(?o) + 0;
-        //obsYp'(?o) = obsYp(?o) + 0;
+	obsXv'(?o) = cos[obsHead(?o)]*obsV(?o);
+	obsYv'(?o) = sin[obsHead(?o)]*obsV(?o);
+        obsXp'(?o) = obsXp(?o) + obsXv*0.5;
+        obsYp'(?o) = obsYp(?o) + obsYv*0.5;
 
         //tick time
         time' = time + 1;
