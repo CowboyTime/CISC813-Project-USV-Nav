@@ -2,7 +2,7 @@ non-fluents nf_USV_obstacle_nav_v2 {
     domain = USV_obstacle_nav_v2;
 
     objects{
-      obs : {o1, o2};
+      obs : {o1, o2, o3, o4, o5};
       USV : {b1};
     };
     non-fluents {
@@ -26,10 +26,25 @@ instance USV_obstacle_nav_inst_v2 {
       obsV(o1) = 1.0;
       obsHead(o1) = 3.1415;
 
-      obsXp(o2) = 40.0;
+      obsXp(o2) = 10.0;
       obsYp(o2) = 60.0;
-      obsV(o2) = 0.8;
+      obsV(o2) = -0.6;
       obsHead(o2) = 3.1415;
+
+      obsXp(o3) = 50;
+      obsYp(o3) = 90;
+      obsV(o3) = 1.1;
+      obsHead(o3) = -0.7853982;
+
+      obsXp(o4) = 100.0;
+      obsYp(o4) = 100.0;
+      obsV(o4) = 1.5;
+      obsHead(o4) = -2.356194;
+
+      obsXp(o5) = 80.0;
+      obsYp(o5) = 30.0;
+      obsV(o5) = 1.3;
+      obsHead(o5) = 2.6179;
 
     };
 
