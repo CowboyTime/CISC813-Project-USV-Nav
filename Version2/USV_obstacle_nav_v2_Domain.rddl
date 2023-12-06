@@ -16,12 +16,12 @@ domain USV_obstacle_nav_v2 {
 
     pvariables {
 
-        XG : {non-fluent, real, default = 100.0};
-        YG : {non-fluent, real, default = 100.0};
+        XG : {non-fluent, real, default = 50.0};
+        YG : {non-fluent, real, default = 50.0};
         //testVariable : {non-fluent, bool, default = true};
         damaged(USV) : {state-fluent, bool, default = false};
         distance(USV) : {state-fluent, real, default = 0.0};
-        time : {state-fluent, real, default = 0.0};
+        time : {state-fluent, int, default = 0};
 
         xPos(USV) : {state-fluent, real, default = 0.0};
         yPos(USV) : {state-fluent, real, default = 0.0};
@@ -52,14 +52,19 @@ domain USV_obstacle_nav_v2 {
         yVel'(?b) = sin[heading(?b)]*tVel(?b);
 
 
-        distance'(?b) = pow[(XG - xPos(?b)),2] + pow[(YG - yPos(?b)),2];
+        distance'(?b) = hypot[(XG - xPos(?b)), (YG - yPos(?b))];
 
-        damaged'(?b) = if (exists_{?o : obs}((pow[(xPos(?b) - obsXp(?o)),2] + pow[(yPos(?b) - obsYp(?o)),2]) <= 100) | damaged(?b))
+        damaged'(?b) = if (exists_{?o : obs}(hypot[(xPos(?b) - obsXp(?o)), (yPos(?b) - obsYp(?o))] <= 10))
                     then true
                  else
-                    false;
+                    if (damaged(?b))
+                      then true
+                    else
+                      false;
 
-        obsHead'(?o) = obsHead(?o) + 0;
+        //damaged'(?b) = false;
+
+        obsHead'(?o) = obsHead(?o) + Normal(0,0.001);
         obsV'(?o) = obsV(?o) + 0;
 
         obsXp'(?o) = obsXp(?o) + cos[obsHead(?o)]*obsV(?o)*0.5;
