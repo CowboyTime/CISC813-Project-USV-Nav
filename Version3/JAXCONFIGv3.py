@@ -2,7 +2,7 @@
 JAXCONFIG = r"""
 [Model]
 logic='FuzzyLogic'
-logic_kwargs={'weight': 750}
+logic_kwargs={'weight': 850}
 tnorm='ProductTNorm'
 tnorm_kwargs={}
 
@@ -14,6 +14,7 @@ optimizer_kwargs={'learning_rate': 0.001}
 batch_size_train=10
 batch_size_test=10
 action_bounds={'tVel': (0, 3), 'heading' : (-3.14, 3.14)}
+rollout_horizon = 15
 
 [Training]
 key=42
