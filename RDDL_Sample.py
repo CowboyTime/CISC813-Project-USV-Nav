@@ -263,7 +263,6 @@ optimizer_kwargs={'learning_rate': 0.001}
 batch_size_train=10
 batch_size_test=10
 action_bounds={'tVel': (0, 3), 'heading' : (-3.14, 3.14)}
-rollout_horizon = 15
 
 [Training]
 key=42
@@ -395,7 +394,7 @@ def use_jax():
     planner_args, _, train_args = load_config('jax.cfg')
 
     planner = JaxRDDLBackpropPlanner(rddl=myEnv.model, **planner_args)
-    agent = JaxOnlineController(planner, **train_args)
+    agent = JaxOfflineController(planner, **train_args)
 
 use_jax()
 #use_random()
